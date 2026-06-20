@@ -1,0 +1,24 @@
+{
+  "name": "workout-tracker-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Workout Tracker API — Express + Prisma + Postgres.",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "test": "node --test",
+    "prisma:generate": "prisma generate",
+    "db:seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9",
+    "prisma": "^5.22.0"
+  }
+}

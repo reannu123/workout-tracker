@@ -1,0 +1,63 @@
+// Workout Tracker domain: a session contains exercises; each exercise has sets.
+// Free-form exercise entry reuses Exercise rows by name.
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Exercise {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessionExercises SessionExercise[]
+}
+
+model WorkoutSession {
+  id          String   @id @default(cuid())
+  performedAt DateTime
+  notes       String?
+  durationMin Int? // session length in minutes (for "time worked out" analytics)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  exercises SessionExercise[]
+
+  @@index([performedAt])
+}
+
+model SessionExercise {
+  id         String   @id @default(cuid())
+  sessionId  String
+  exerciseId String
+  orderIndex Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  session  WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exercise Exercise       @relation(fields: [exerciseId], references: [id])
+  sets     Set[]
+
+  @@index([sessionId])
+  @@index([exerciseId])
+}
+
+model Set {
+  id                String   @id @default(cuid())
+  sessionExerciseId String
+  setNumber         Int
+  reps              Int
+  weight            Float
+  rpe               Float?
+  isWarmup          Boolean  @default(false)
+  createdAt         DateTime @default(now())
+
+  sessionExercise SessionExercise @relation(fields: [sessionExerciseId], references: [id], onDelete: Cascade)
+
+  @@index([sessionExerciseId])
+}
