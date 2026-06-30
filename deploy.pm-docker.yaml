@@ -1,0 +1,22 @@
+app: workout-tracker
+public_url: https://workout.reannu.dev
+health_path: /api/health
+images:
+  client: ghcr.io/reannu123/workout-tracker-client
+  server: ghcr.io/reannu123/workout-tracker-server
+image_tag: main
+host: pm-docker
+host_ip: 192.168.0.125
+host_port: 3025
+deploy_dir: /docker/compose/workout-tracker
+compose_file: compose.deploy.yaml
+service: client
+proxy:
+  host: raspberrypi
+  manager: npm
+  base_url: http://192.168.0.111:81
+  domain: workout.reannu.dev
+  forward_scheme: http
+  forward_host: 192.168.0.125
+  forward_port: 3025
+  allow_websocket_upgrade: true

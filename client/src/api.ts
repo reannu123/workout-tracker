@@ -1,6 +1,11 @@
 import type { Exercise, Progress, SessionFull, SessionListItem, Summary } from "./types";
 
-const BASE = `${(import.meta.env.VITE_API_URL as string) || "http://localhost:4000"}/api/v1`;
+const configuredApiUrl = import.meta.env.VITE_API_URL as string | undefined;
+const apiOrigin =
+  configuredApiUrl === undefined
+    ? "http://localhost:4000"
+    : configuredApiUrl.replace(/\/$/, "");
+const BASE = `${apiOrigin}/api/v1`;
 
 async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {

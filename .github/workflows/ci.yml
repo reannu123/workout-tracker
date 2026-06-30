@@ -38,4 +38,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: cp .env.example .env && docker compose config --quiet && echo "compose OK"
+      - name: Validate compose files
+        run: |
+          cp .env.example .env
+          docker compose config --quiet
+          POSTGRES_PASSWORD=dummy docker compose -f compose.deploy.yaml config --quiet
+          echo "compose OK"
