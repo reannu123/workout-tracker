@@ -25,6 +25,10 @@ Spec source: `~/Freelance/Archive/Freelance-OS/Projects/01-Workout-Tracker`.
       client/server images, pm-docker port `3025`, persisted Postgres volume,
       NPM proxy host `id=32`, local/public `/api/health` 200, public homepage
       200, analytics API 200, and browser smoke rendered dashboard data.
+- [x] [Dev] Saved workout editing: session detail links to a prefilled editor;
+      duration, notes, exercises, sets, RPE, and warmup flags update through an
+      atomic API transaction. Verified with server tests, a client build, and a
+      Docker API create-update-read-delete smoke check.
 
 ## Next — user action
 
@@ -37,7 +41,6 @@ Spec source: `~/Freelance/Archive/Freelance-OS/Projects/01-Workout-Tracker`.
 ## Later
 
 - [ ] Multi-user auth (the v1 was intentionally single-user).
-- [ ] Edit individual sets after saving (currently delete + re-log).
 - [ ] Routine templates; rest timer; PR notifications.
 - [ ] CSV export; PWA / installable.
 - [ ] Polish: leftmost chart x-axis label can clip — anchor first/last labels.

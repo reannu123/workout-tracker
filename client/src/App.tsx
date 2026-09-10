@@ -15,6 +15,7 @@ export default function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/log" element={<Log />} />
           <Route path="/history" element={<History />} />
+          <Route path="/session/:id/edit" element={<Log />} />
           <Route path="/session/:id" element={<SessionDetail />} />
           <Route path="/progress" element={<Progress />} />
           <Route path="*" element={<Navigate to="/" replace />} />

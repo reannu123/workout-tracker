@@ -59,5 +59,5 @@ export type Progress = {
 };
 
 // Draft types used by the logging form before saving.
-export type DraftSet = { reps: string; weight: string; isWarmup: boolean };
+export type DraftSet = { reps: string; weight: string; rpe: string; isWarmup: boolean };
 export type DraftExercise = { name: string; sets: DraftSet[] };

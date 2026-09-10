@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api";
 import type { DraftExercise, Exercise } from "../types";
 import { Plus, Trash } from "../components/icons";
 
-const emptySet = () => ({ reps: "", weight: "", isWarmup: false });
+const emptySet = () => ({ reps: "", weight: "", rpe: "", isWarmup: false });
 const emptyExercise = (): DraftExercise => ({ name: "", sets: [emptySet()] });
 
 export default function Log() {
+  const { id } = useParams();
+  const editing = Boolean(id);
   const navigate = useNavigate();
   const [known, setKnown] = useState<Exercise[]>([]);
   const [duration, setDuration] = useState("");
@@ -15,10 +17,36 @@ export default function Log() {
   const [exercises, setExercises] = useState<DraftExercise[]>([emptyExercise()]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [ready, setReady] = useState(!editing);
 
   useEffect(() => {
     api.exercises().then(setKnown).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!id) return;
+
+    api.session(id)
+      .then((session) => {
+        setDuration(session.durationMin != null ? String(session.durationMin) : "");
+        setNotes(session.notes || "");
+        setExercises(
+          session.exercises.length > 0
+            ? session.exercises.map((item) => ({
+                name: item.exercise.name,
+                sets: item.sets.map((set) => ({
+                  reps: String(set.reps),
+                  weight: String(set.weight),
+                  rpe: set.rpe != null ? String(set.rpe) : "",
+                  isWarmup: set.isWarmup,
+                })),
+              }))
+            : [emptyExercise()]
+        );
+        setReady(true);
+      })
+      .catch((e) => setError(e.message));
+  }, [id]);
 
   const update = (fn: (draft: DraftExercise[]) => void) =>
     setExercises((prev) => {
@@ -37,7 +65,12 @@ export default function Log() {
           name: e.name.trim(),
           sets: e.sets
             .filter((s) => Number(s.reps) > 0)
-            .map((s) => ({ reps: Number(s.reps), weight: Number(s.weight) || 0, isWarmup: s.isWarmup })),
+            .map((s) => ({
+              reps: Number(s.reps),
+              weight: Number(s.weight) || 0,
+              rpe: s.rpe ? Number(s.rpe) : undefined,
+              isWarmup: s.isWarmup,
+            })),
         }))
         .filter((e) => e.name && e.sets.length > 0),
     };
@@ -47,17 +80,24 @@ export default function Log() {
     }
     setSaving(true);
     try {
-      const created = await api.createSession(payload);
-      navigate(`/session/${created.id}`);
+      const saved = id
+        ? await api.updateSession(id, payload)
+        : await api.createSession(payload);
+      navigate(`/session/${saved.id}`);
     } catch (e: any) {
       setError(e.message);
       setSaving(false);
     }
   };
 
+  if (!ready) {
+    return <p className={error ? "text-red-400" : "text-white/50"}>{error || "Loading workout…"}</p>;
+  }
+
   return (
     <div className="space-y-5 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold">Log workout</h1>
+      {id && <Link to={`/session/${id}`} className="text-white/50 hover:text-white text-sm">← Workout</Link>}
+      <h1 className="text-2xl font-bold">{editing ? "Edit workout" : "Log workout"}</h1>
 
       <datalist id="known-exercises">
         {known.map((e) => (
@@ -83,16 +123,18 @@ export default function Log() {
           </div>
 
           <div className="space-y-2">
-            <div className="grid grid-cols-[2rem_1fr_1fr_auto_2rem] gap-2 text-xs text-white/40 px-1">
-              <span>#</span><span>Reps</span><span>Weight</span><span>Warmup</span><span />
+            <div className="grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto_2rem] gap-2 text-xs text-white/40 px-1">
+              <span>#</span><span>Reps</span><span>Weight</span><span>RPE</span><span>Warmup</span><span />
             </div>
             {ex.sets.map((s, si) => (
-              <div key={si} className="grid grid-cols-[2rem_1fr_1fr_auto_2rem] gap-2 items-center">
+              <div key={si} className="grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto_2rem] gap-2 items-center">
                 <span className="text-white/40 text-sm">{si + 1}</span>
                 <input className="input" type="number" inputMode="numeric" placeholder="reps" value={s.reps}
                   onChange={(e) => update((d) => (d[ei].sets[si].reps = e.target.value))} />
                 <input className="input" type="number" inputMode="decimal" placeholder="kg" value={s.weight}
                   onChange={(e) => update((d) => (d[ei].sets[si].weight = e.target.value))} />
+                <input className="input" type="number" inputMode="decimal" placeholder="—" value={s.rpe}
+                  onChange={(e) => update((d) => (d[ei].sets[si].rpe = e.target.value))} />
                 <label className="flex items-center justify-center">
                   <input type="checkbox" checked={s.isWarmup}
                     onChange={(e) => update((d) => (d[ei].sets[si].isWarmup = e.target.checked))} />
@@ -108,7 +150,7 @@ export default function Log() {
             <button className="text-emerald-400 text-sm inline-flex items-center gap-1 hover:text-emerald-300"
               onClick={() => update((d) => {
                 const last = d[ei].sets[d[ei].sets.length - 1];
-                d[ei].sets.push({ reps: "", weight: last?.weight ?? "", isWarmup: false });
+                d[ei].sets.push({ reps: "", weight: last?.weight ?? "", rpe: "", isWarmup: false });
               })}>
               <Plus size={14} /> Add set
             </button>
@@ -136,7 +178,7 @@ export default function Log() {
       {error && <p className="text-red-400 text-sm">{error}</p>}
 
       <button className="btn-primary w-full" disabled={saving} onClick={save}>
-        {saving ? "Saving…" : "Save workout"}
+        {saving ? "Saving…" : editing ? "Save changes" : "Save workout"}
       </button>
     </div>
   );

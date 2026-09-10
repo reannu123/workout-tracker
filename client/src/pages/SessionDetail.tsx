@@ -37,7 +37,10 @@ export default function SessionDetail() {
           </p>
           {session.notes && <p className="mt-1 text-white/70 italic">“{session.notes}”</p>}
         </div>
-        <button onClick={remove} className="btn-ghost px-2" title="Delete session"><Trash /></button>
+        <div className="flex items-center gap-2">
+          <Link to={`/session/${id}/edit`} className="btn-ghost text-sm">Edit</Link>
+          <button onClick={remove} className="btn-ghost px-2" title="Delete session"><Trash /></button>
+        </div>
       </div>
 
       {session.exercises.map((se) => (

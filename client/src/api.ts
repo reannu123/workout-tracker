@@ -24,6 +24,8 @@ export const api = {
   session: (id: string) => req<SessionFull>(`/sessions/${id}`),
   createSession: (body: unknown) =>
     req<SessionFull>("/sessions", { method: "POST", body: JSON.stringify(body) }),
+  updateSession: (id: string, body: unknown) =>
+    req<SessionFull>(`/sessions/${id}`, { method: "PUT", body: JSON.stringify(body) }),
   deleteSession: (id: string) => req<{ ok: true }>(`/sessions/${id}`, { method: "DELETE" }),
   progress: (exerciseId: string) => req<Progress>(`/analytics/progress/${exerciseId}`),
 };

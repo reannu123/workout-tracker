@@ -18,10 +18,59 @@ function getFullSession(id) {
   return prisma.workoutSession.findUnique({ where: { id }, include: fullInclude });
 }
 
+function normalizeExercises(exercises) {
+  if (!Array.isArray(exercises)) return [];
+
+  return exercises
+    .map((item) => {
+      const name = String(item?.name || "").trim();
+      const sets = (Array.isArray(item?.sets) ? item.sets : [])
+        .filter((set) => set && Number(set.reps) > 0)
+        .map((set) => ({
+          reps: Number(set.reps),
+          weight: Number(set.weight) || 0,
+          rpe: set.rpe != null && set.rpe !== "" ? Number(set.rpe) : null,
+          isWarmup: !!set.isWarmup,
+        }));
+      return { name, sets };
+    })
+    .filter((exercise) => exercise.name && exercise.sets.length > 0);
+}
+
+async function createSessionExercises(tx, sessionId, exercises) {
+  for (let i = 0; i < exercises.length; i++) {
+    const exerciseInput = exercises[i];
+    const exercise = await tx.exercise.upsert({
+      where: { name: exerciseInput.name },
+      update: {},
+      create: { name: exerciseInput.name },
+    });
+    const sessionExercise = await tx.sessionExercise.create({
+      data: { sessionId, exerciseId: exercise.id, orderIndex: i },
+    });
+
+    for (let j = 0; j < exerciseInput.sets.length; j++) {
+      const set = exerciseInput.sets[j];
+      await tx.set.create({
+        data: {
+          sessionExerciseId: sessionExercise.id,
+          setNumber: j + 1,
+          ...set,
+        },
+      });
+    }
+  }
+}
+
 // POST /sessions — create a whole session at once. Exercises are matched by
 // name (reused if seen before, created if new) per the free-form logging spec.
 router.post("/", async (req, res) => {
-  const { performedAt, notes, durationMin, exercises = [] } = req.body || {};
+  const { performedAt, notes, durationMin } = req.body || {};
+  const exercises = normalizeExercises(req.body?.exercises);
+  if (exercises.length === 0) {
+    return res.status(400).json({ error: "Add at least one exercise with a set." });
+  }
+
   try {
     const session = await prisma.$transaction(async (tx) => {
       const s = await tx.workoutSession.create({
@@ -31,28 +80,7 @@ router.post("/", async (req, res) => {
           durationMin: durationMin != null && durationMin !== "" ? Number(durationMin) : null,
         },
       });
-      for (let i = 0; i < exercises.length; i++) {
-        const name = String(exercises[i]?.name || "").trim();
-        if (!name) continue;
-        const exercise = await tx.exercise.upsert({ where: { name }, update: {}, create: { name } });
-        const se = await tx.sessionExercise.create({
-          data: { sessionId: s.id, exerciseId: exercise.id, orderIndex: i },
-        });
-        const sets = (exercises[i].sets || []).filter((st) => st && Number(st.reps) > 0);
-        for (let j = 0; j < sets.length; j++) {
-          const st = sets[j];
-          await tx.set.create({
-            data: {
-              sessionExerciseId: se.id,
-              setNumber: j + 1,
-              reps: Number(st.reps),
-              weight: Number(st.weight) || 0,
-              rpe: st.rpe != null && st.rpe !== "" ? Number(st.rpe) : null,
-              isWarmup: !!st.isWarmup,
-            },
-          });
-        }
-      }
+      await createSessionExercises(tx, s.id, exercises);
       return s;
     });
     const full = await getFullSession(session.id);
@@ -60,6 +88,46 @@ router.post("/", async (req, res) => {
   } catch (e) {
     console.error("create session failed:", e);
     res.status(400).json({ error: "Could not create session." });
+  }
+});
+
+// PUT /sessions/:id — update session details and replace its exercises/sets.
+// The transaction keeps the original session intact if any nested write fails.
+router.put("/:id", async (req, res) => {
+  const { notes, durationMin } = req.body || {};
+  const exercises = normalizeExercises(req.body?.exercises);
+  if (exercises.length === 0) {
+    return res.status(400).json({ error: "Add at least one exercise with a set." });
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const existing = await tx.workoutSession.findUnique({ where: { id: req.params.id } });
+      if (!existing) {
+        const error = new Error("Session not found.");
+        error.code = "SESSION_NOT_FOUND";
+        throw error;
+      }
+
+      await tx.workoutSession.update({
+        where: { id: req.params.id },
+        data: {
+          notes: notes?.trim() || null,
+          durationMin: durationMin != null && durationMin !== "" ? Number(durationMin) : null,
+        },
+      });
+      await tx.sessionExercise.deleteMany({ where: { sessionId: req.params.id } });
+      await createSessionExercises(tx, req.params.id, exercises);
+    });
+
+    const full = await getFullSession(req.params.id);
+    res.json({ ...full, stats: sessionStats(full) });
+  } catch (e) {
+    if (e.code === "SESSION_NOT_FOUND") {
+      return res.status(404).json({ error: "Session not found." });
+    }
+    console.error("update session failed:", e);
+    res.status(400).json({ error: "Could not update session." });
   }
 });
 

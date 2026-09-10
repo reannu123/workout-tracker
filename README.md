@@ -32,6 +32,8 @@ subscription.**
 - **Dashboard** — total volume, session count, current **streak**, workout days,
   average duration, and a volume-per-session chart.
 - **History** — every session with its exercises, volume, and duration.
+- **Saved workout editing** — update session details, exercises, sets, RPE, and
+  warmup flags after logging.
 - **Self-hosted** — Postgres for your data, seeded with realistic demo workouts
   so the app is populated on first run.
 
@@ -86,7 +88,7 @@ estimated 1RM, streaks, progress) live in a pure, unit-tested module
 | GET | `/analytics/summary` | dashboard totals + volume trend |
 | GET | `/analytics/progress/:exerciseId` | per-session progress + PRs |
 | GET / POST | `/sessions` | list / create a full session |
-| GET / DELETE | `/sessions/:id` | detail / delete |
+| GET / PUT / DELETE | `/sessions/:id` | detail / update / delete |
 | GET / POST | `/exercises` | list / create exercises |
 
 ## Verify
@@ -103,7 +105,6 @@ See [`docs/CASE_STUDY.md`](docs/CASE_STUDY.md) for the design write-up.
 
 - Single-user, no authentication (v1 scope — it's a personal tracker). Multi-user
   auth is the natural next step for a shared/deployed instance.
-- Editing individual sets after saving isn't in the UI yet (delete + re-log).
 - Roadmap: routine templates, rest timer, PR notifications, CSV export, PWA.
 
 ## License
