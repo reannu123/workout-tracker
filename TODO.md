@@ -29,6 +29,11 @@ Spec source: `~/Freelance/Archive/Freelance-OS/Projects/01-Workout-Tracker`.
       duration, notes, exercises, sets, RPE, and warmup flags update through an
       atomic API transaction. Verified with server tests, a client build, and a
       Docker API create-update-read-delete smoke check.
+- [x] [DevOps] Workout editor release deployed 2026-09-11 from commit `e9dd7c7`:
+      CI run `34531885343` and GHCR run `34531885394` passed; immutable client
+      and server images are healthy on pm-docker; local/public home and health
+      checks returned 200; NPM proxy host `id=32` remained unchanged; live
+      browser smoke verified the prefilled editor and Add exercise action.
 
 ## Next — user action
 
