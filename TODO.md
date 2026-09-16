@@ -36,6 +36,11 @@ Spec source: `~/Freelance/Archive/Freelance-OS/Projects/01-Workout-Tracker`.
       browser smoke verified the prefilled editor and Add exercise action.
 - [x] [Dev] Progress exercise selector hides exercises with zero recorded
       workouts. Verified 2026-09-16 with a clean production client build.
+- [x] [Dev] Workout logger suggests previously used exercises and autofills the
+      selected exercise with the reps and weight from its most recent set.
+      Verified 2026-09-16 with a production client build, six server tests,
+      Prisma validation, a Compose/API smoke check, and a browser interaction
+      that selected Bench Press and filled 5 reps at 70 kg.
 - [x] [DevOps] Progress filter release deployed 2026-09-16 from commit
       `cf54beb`: CI run `35071533385` and GHCR run `35071533424` passed;
       immutable client/server images are healthy on pm-docker; PostgreSQL was

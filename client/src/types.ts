@@ -1,4 +1,9 @@
-export type Exercise = { id: string; name: string; usedCount: number };
+export type Exercise = {
+  id: string;
+  name: string;
+  usedCount: number;
+  lastSet: { reps: number; weight: number; performedAt: string } | null;
+};
 
 export type SetRow = {
   id?: string;

@@ -55,6 +55,29 @@ export default function Log() {
       return next;
     });
 
+  const knownExercise = (name: string) =>
+    known.find((exercise) => exercise.name.toLowerCase() === name.trim().toLowerCase());
+
+  const selectExercise = (exerciseIndex: number, name: string) => {
+    const selected = knownExercise(name);
+
+    update((draft) => {
+      const exercise = draft[exerciseIndex];
+      const changedExercise =
+        exercise.name.trim().toLowerCase() !== selected?.name.toLowerCase();
+
+      exercise.name = selected?.name ?? name;
+      if (changedExercise && selected?.lastSet) {
+        exercise.sets = [{
+          reps: String(selected.lastSet.reps),
+          weight: String(selected.lastSet.weight),
+          rpe: "",
+          isWarmup: false,
+        }];
+      }
+    });
+  };
+
   const save = async () => {
     setError("");
     const payload = {
@@ -100,20 +123,26 @@ export default function Log() {
       <h1 className="text-2xl font-bold">{editing ? "Edit workout" : "Log workout"}</h1>
 
       <datalist id="known-exercises">
-        {known.map((e) => (
-          <option key={e.id} value={e.name} />
+        {known.filter((e) => e.usedCount > 0).map((e) => (
+          <option
+            key={e.id}
+            value={e.name}
+            label={e.lastSet ? `Last: ${e.lastSet.reps} reps at ${e.lastSet.weight} kg` : undefined}
+          />
         ))}
       </datalist>
 
-      {exercises.map((ex, ei) => (
-        <div key={ei} className="card p-4 space-y-3">
+      {exercises.map((ex, ei) => {
+        const previousSet = knownExercise(ex.name)?.lastSet;
+
+        return <div key={ei} className="card p-4 space-y-3">
           <div className="flex items-center gap-2">
             <input
               className="input flex-1"
               list="known-exercises"
               placeholder="Exercise (e.g. Bench Press)"
               value={ex.name}
-              onChange={(e) => update((d) => (d[ei].name = e.target.value))}
+              onChange={(e) => selectExercise(ei, e.target.value)}
             />
             {exercises.length > 1 && (
               <button className="btn-ghost px-2" title="Remove exercise" onClick={() => update((d) => d.splice(ei, 1))}>
@@ -121,6 +150,12 @@ export default function Log() {
               </button>
             )}
           </div>
+
+          {previousSet && (
+            <p className="text-xs text-white/40">
+              Last logged: {previousSet.reps} reps at {previousSet.weight} kg
+            </p>
+          )}
 
           <div className="space-y-2">
             <div className="grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto_2rem] gap-2 text-xs text-white/40 px-1">
@@ -155,8 +190,8 @@ export default function Log() {
               <Plus size={14} /> Add set
             </button>
           </div>
-        </div>
-      ))}
+        </div>;
+      })}
 
       <button className="btn-ghost w-full inline-flex items-center justify-center gap-1"
         onClick={() => setExercises((p) => [...p, emptyExercise()])}>
