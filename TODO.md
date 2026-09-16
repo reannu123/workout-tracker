@@ -41,6 +41,13 @@ Spec source: `~/Freelance/Archive/Freelance-OS/Projects/01-Workout-Tracker`.
       Verified 2026-09-16 with a production client build, six server tests,
       Prisma validation, a Compose/API smoke check, and a browser interaction
       that selected Bench Press and filled 5 reps at 70 kg.
+- [x] [DevOps] Workout suggestion release deployed 2026-09-16 from commit
+      `618edd3`: CI run `35076610840` and GHCR run `35076610810` passed;
+      immutable client/server images are healthy on pm-docker; PostgreSQL was
+      backed up and retained 3 sessions, 17 exercises, and 50 sets; NPM proxy
+      host `id=32` and both existing domains were preserved; internal/public
+      home and health checks returned 200; live browser selection filled the
+      latest 10 reps at 45 kg for Bench Press Machine.
 - [x] [DevOps] Progress filter release deployed 2026-09-16 from commit
       `cf54beb`: CI run `35071533385` and GHCR run `35071533424` passed;
       immutable client/server images are healthy on pm-docker; PostgreSQL was
