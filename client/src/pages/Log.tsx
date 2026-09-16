@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api";
 import type { DraftExercise, Exercise } from "../types";
-import { Plus, Trash } from "../components/icons";
+import { ChevronDown, Plus, Trash } from "../components/icons";
 
 const emptySet = () => ({ reps: "", weight: "", rpe: "", isWarmup: false });
 const emptyExercise = (): DraftExercise => ({ name: "", sets: [emptySet()] });
@@ -18,6 +18,8 @@ export default function Log() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [ready, setReady] = useState(!editing);
+  const [openExercise, setOpenExercise] = useState<number | null>(null);
+  const [activeSuggestion, setActiveSuggestion] = useState(0);
 
   useEffect(() => {
     api.exercises().then(setKnown).catch(() => {});
@@ -48,6 +50,20 @@ export default function Log() {
       .catch((e) => setError(e.message));
   }, [id]);
 
+  useEffect(() => {
+    if (openExercise == null) return;
+
+    const closeSuggestions = (event: PointerEvent) => {
+      const target = event.target as Element;
+      if (!target.closest(`[data-exercise-picker="${openExercise}"]`)) {
+        setOpenExercise(null);
+      }
+    };
+
+    document.addEventListener("pointerdown", closeSuggestions, true);
+    return () => document.removeEventListener("pointerdown", closeSuggestions, true);
+  }, [openExercise]);
+
   const update = (fn: (draft: DraftExercise[]) => void) =>
     setExercises((prev) => {
       const next = structuredClone(prev);
@@ -58,16 +74,30 @@ export default function Log() {
   const knownExercise = (name: string) =>
     known.find((exercise) => exercise.name.toLowerCase() === name.trim().toLowerCase());
 
-  const selectExercise = (exerciseIndex: number, name: string) => {
-    const selected = knownExercise(name);
+  const exerciseSuggestions = (name: string) => {
+    const usedExercises = known.filter((exercise) => exercise.usedCount > 0);
+    const query = name.trim().toLowerCase();
+
+    if (!query || knownExercise(name)) return usedExercises;
+    return usedExercises.filter((exercise) => exercise.name.toLowerCase().includes(query));
+  };
+
+  const changeExerciseName = (exerciseIndex: number, name: string) => {
+    update((draft) => (draft[exerciseIndex].name = name));
+    setOpenExercise(exerciseIndex);
+    setActiveSuggestion(0);
+  };
+
+  const selectExercise = (exerciseIndex: number, selected: Exercise) => {
+    setOpenExercise(null);
 
     update((draft) => {
       const exercise = draft[exerciseIndex];
       const changedExercise =
-        exercise.name.trim().toLowerCase() !== selected?.name.toLowerCase();
+        exercise.name.trim().toLowerCase() !== selected.name.toLowerCase();
 
-      exercise.name = selected?.name ?? name;
-      if (changedExercise && selected?.lastSet) {
+      exercise.name = selected.name;
+      if (selected.lastSet && (!editing || changedExercise)) {
         exercise.sets = [{
           reps: String(selected.lastSet.reps),
           weight: String(selected.lastSet.weight),
@@ -76,6 +106,31 @@ export default function Log() {
         }];
       }
     });
+  };
+
+  const handleExerciseKeyDown = (
+    event: React.KeyboardEvent<HTMLInputElement>,
+    exerciseIndex: number,
+    suggestions: Exercise[]
+  ) => {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setOpenExercise(exerciseIndex);
+      if (suggestions.length > 0) {
+        setActiveSuggestion((current) =>
+          openExercise === exerciseIndex ? Math.min(current + 1, suggestions.length - 1) : 0
+        );
+      }
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setOpenExercise(exerciseIndex);
+      setActiveSuggestion((current) => Math.max(current - 1, 0));
+    } else if (event.key === "Enter" && openExercise === exerciseIndex && suggestions[activeSuggestion]) {
+      event.preventDefault();
+      selectExercise(exerciseIndex, suggestions[activeSuggestion]);
+    } else if (event.key === "Escape" || event.key === "Tab") {
+      setOpenExercise(null);
+    }
   };
 
   const save = async () => {
@@ -122,30 +177,99 @@ export default function Log() {
       {id && <Link to={`/session/${id}`} className="text-white/50 hover:text-white text-sm">← Workout</Link>}
       <h1 className="text-2xl font-bold">{editing ? "Edit workout" : "Log workout"}</h1>
 
-      <datalist id="known-exercises">
-        {known.filter((e) => e.usedCount > 0).map((e) => (
-          <option
-            key={e.id}
-            value={e.name}
-            label={e.lastSet ? `Last: ${e.lastSet.reps} reps at ${e.lastSet.weight} kg` : undefined}
-          />
-        ))}
-      </datalist>
-
       {exercises.map((ex, ei) => {
         const previousSet = knownExercise(ex.name)?.lastSet;
+        const suggestions = exerciseSuggestions(ex.name);
+        const suggestionsOpen = openExercise === ei;
+        const listboxId = `exercise-suggestions-${ei}`;
 
         return <div key={ei} className="card p-4 space-y-3">
           <div className="flex items-center gap-2">
-            <input
-              className="input flex-1"
-              list="known-exercises"
-              placeholder="Exercise (e.g. Bench Press)"
-              value={ex.name}
-              onChange={(e) => selectExercise(ei, e.target.value)}
-            />
+            <div className="relative min-w-0 flex-1" data-exercise-picker={ei}>
+              <input
+                className="input w-full pr-10"
+                role="combobox"
+                aria-autocomplete="list"
+                aria-label="Exercise name"
+                aria-expanded={suggestionsOpen}
+                aria-controls={listboxId}
+                aria-activedescendant={
+                  suggestionsOpen && suggestions[activeSuggestion]
+                    ? `${listboxId}-${suggestions[activeSuggestion].id}`
+                    : undefined
+                }
+                autoComplete="off"
+                placeholder="Exercise (e.g. Bench Press)"
+                value={ex.name}
+                onFocus={() => {
+                  setOpenExercise(ei);
+                  setActiveSuggestion(0);
+                }}
+                onChange={(e) => changeExerciseName(ei, e.target.value)}
+                onKeyDown={(e) => handleExerciseKeyDown(e, ei, suggestions)}
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-white/50 hover:text-white"
+                aria-label={suggestionsOpen ? "Close exercise suggestions" : "Show previous exercises"}
+                onClick={(event) => {
+                  if (suggestionsOpen) {
+                    setOpenExercise(null);
+                  } else {
+                    setOpenExercise(ei);
+                    setActiveSuggestion(0);
+                    (event.currentTarget.previousElementSibling as HTMLInputElement)?.focus();
+                  }
+                }}
+              >
+                <ChevronDown className={`transition-transform ${suggestionsOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {suggestionsOpen && (
+                <div
+                  id={listboxId}
+                  role="listbox"
+                  className="absolute z-30 mt-2 max-h-64 w-full overflow-y-auto overscroll-contain rounded-xl border border-white/15 bg-slate-900 p-1 shadow-2xl"
+                >
+                  {suggestions.length > 0 ? suggestions.map((suggestion, suggestionIndex) => (
+                    <button
+                      id={`${listboxId}-${suggestion.id}`}
+                      key={suggestion.id}
+                      type="button"
+                      role="option"
+                      aria-selected={suggestionIndex === activeSuggestion}
+                      className={`flex min-h-12 w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left ${
+                        suggestionIndex === activeSuggestion ? "bg-emerald-500/20 text-white" : "text-white/80 hover:bg-white/10"
+                      }`}
+                      onMouseEnter={() => setActiveSuggestion(suggestionIndex)}
+                      onPointerDown={(event) => {
+                        event.preventDefault();
+                        selectExercise(ei, suggestion);
+                      }}
+                      onClick={(event) => {
+                        if (event.detail === 0) selectExercise(ei, suggestion);
+                      }}
+                    >
+                      <span className="font-medium">{suggestion.name}</span>
+                      {suggestion.lastSet && (
+                        <span className="shrink-0 text-xs text-white/45">
+                          {suggestion.lastSet.reps} reps · {suggestion.lastSet.weight} kg
+                        </span>
+                      )}
+                    </button>
+                  )) : (
+                    <p className="px-3 py-3 text-sm text-white/50">
+                      No previous exercise matches. Keep typing to add a new one.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
             {exercises.length > 1 && (
-              <button className="btn-ghost px-2" title="Remove exercise" onClick={() => update((d) => d.splice(ei, 1))}>
+              <button className="btn-ghost px-2" title="Remove exercise" onClick={() => {
+                setOpenExercise(null);
+                update((d) => d.splice(ei, 1));
+              }}>
                 <Trash />
               </button>
             )}
@@ -194,7 +318,10 @@ export default function Log() {
       })}
 
       <button className="btn-ghost w-full inline-flex items-center justify-center gap-1"
-        onClick={() => setExercises((p) => [...p, emptyExercise()])}>
+        onClick={() => {
+          setOpenExercise(null);
+          setExercises((p) => [...p, emptyExercise()]);
+        }}>
         <Plus /> Add exercise
       </button>
 

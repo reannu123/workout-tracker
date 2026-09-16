@@ -41,6 +41,11 @@ Spec source: `~/Freelance/Archive/Freelance-OS/Projects/01-Workout-Tracker`.
       Verified 2026-09-16 with a production client build, six server tests,
       Prisma validation, a Compose/API smoke check, and a browser interaction
       that selected Bench Press and filled 5 reps at 70 kg.
+- [x] [Dev] Replaced the native workout `datalist` with a touch-friendly custom
+      exercise picker so previous-workout suggestions appear on mobile.
+      Verified 2026-09-16 with a production client build and 390×844 touch
+      emulation covering open, filter, selection/autofill, outside close, 48px
+      touch targets, and keyboard selection.
 - [x] [DevOps] Workout suggestion release deployed 2026-09-16 from commit
       `618edd3`: CI run `35076610840` and GHCR run `35076610810` passed;
       immutable client/server images are healthy on pm-docker; PostgreSQL was

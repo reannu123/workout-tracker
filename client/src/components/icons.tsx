@@ -35,6 +35,9 @@ export const Calendar = ({ size = 20, className }: P) => (
 export const ChevronRight = ({ size = 18, className }: P) => (
   <svg {...base(size)} className={className}><path d="m9 18 6-6-6-6" /></svg>
 );
+export const ChevronDown = ({ size = 18, className }: P) => (
+  <svg {...base(size)} className={className}><path d="m6 9 6 6 6-6" /></svg>
+);
 export const TrendingUp = ({ size = 20, className }: P) => (
   <svg {...base(size)} className={className}><path d="M22 7 13.5 15.5l-5-5L2 17" /><path d="M16 7h6v6" /></svg>
 );
