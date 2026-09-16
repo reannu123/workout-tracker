@@ -50,6 +50,15 @@ Spec source: `~/Freelance/Archive/Freelance-OS/Projects/01-Workout-Tracker`.
       selecting an item on touch-down. Verified locally 2026-09-16 at 390×844:
       a real touch gesture moved the list from 0 to 234px, kept the picker open,
       and a subsequent tap selected Pull Up and autofilled 6 reps at 0 kg.
+- [x] [DevOps] Swipeable exercise picker release deployed 2026-09-16 from
+      commit `93d3417`: CI run `35079569568` and GHCR run `35079569495`
+      passed; immutable client/server images are healthy on pm-docker;
+      PostgreSQL was backed up and retained 3 sessions, 17 exercises, and 50
+      sets; NPM proxy host `id=32` remained unchanged; internal/LAN home and
+      health checks returned 200; a live 390×844 touch gesture scrolled the
+      picker from 0 to 218px without selection, then a tap selected Row Machine
+      and filled 12 reps at 25 kg. The public edge retained its Cloudflare
+      Basic-auth 401.
 - [x] [DevOps] Mobile exercise picker release deployed 2026-09-16 from commit
       `b21f7eb`: CI run `35078562622` and GHCR run `35078562623` passed;
       immutable client/server images are healthy on pm-docker; PostgreSQL was
