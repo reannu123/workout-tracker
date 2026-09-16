@@ -36,6 +36,12 @@ Spec source: `~/Freelance/Archive/Freelance-OS/Projects/01-Workout-Tracker`.
       browser smoke verified the prefilled editor and Add exercise action.
 - [x] [Dev] Progress exercise selector hides exercises with zero recorded
       workouts. Verified 2026-09-16 with a clean production client build.
+- [x] [DevOps] Progress filter release deployed 2026-09-16 from commit
+      `cf54beb`: CI run `35071533385` and GHCR run `35071533424` passed;
+      immutable client/server images are healthy on pm-docker; PostgreSQL was
+      backed up and remained unchanged; local/public health and Progress checks
+      returned 200; NPM proxy host `id=32` remained unchanged; live browser
+      rendering showed only the nine exercises with recorded workouts.
 
 ## Next — user action
 
