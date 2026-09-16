@@ -46,6 +46,14 @@ Spec source: `~/Freelance/Archive/Freelance-OS/Projects/01-Workout-Tracker`.
       Verified 2026-09-16 with a production client build and 390×844 touch
       emulation covering open, filter, selection/autofill, outside close, 48px
       touch targets, and keyboard selection.
+- [x] [DevOps] Mobile exercise picker release deployed 2026-09-16 from commit
+      `b21f7eb`: CI run `35078562622` and GHCR run `35078562623` passed;
+      immutable client/server images are healthy on pm-docker; PostgreSQL was
+      backed up and retained 3 sessions, 17 exercises, and 50 sets; NPM proxy
+      host `id=32` matched `workout.reannu.dev` at `192.168.0.125:3025`;
+      internal/LAN home and health checks returned 200; a live 390×844 touch
+      smoke showed 9 suggestions and filled 10 reps at 45 kg. The public edge
+      returned its pre-existing Cloudflare Basic-auth 401.
 - [x] [DevOps] Workout suggestion release deployed 2026-09-16 from commit
       `618edd3`: CI run `35076610840` and GHCR run `35076610810` passed;
       immutable client/server images are healthy on pm-docker; PostgreSQL was
