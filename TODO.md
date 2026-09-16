@@ -4,12 +4,6 @@ Status: **flagship build complete** (verified end-to-end 2026-06-20).
 Central direction lives in `~/Freelance/NOW.md`; this file tracks the build.
 Spec source: `~/Freelance/Archive/Freelance-OS/Projects/01-Workout-Tracker`.
 
-## Now
-
-- [ ] [DevOps] Deploy the multi-tag workout release through CI/GHCR to
-      pm-docker, back up PostgreSQL, and verify the migration, NPM route,
-      Homepage entry, health endpoints, and live tag workflow.
-
 ## Done
 
 - [x] Monorepo scaffold: docker-compose, server/client Dockerfiles, nginx SPA,
@@ -63,6 +57,15 @@ Spec source: `~/Freelance/Archive/Freelance-OS/Projects/01-Workout-Tracker`.
       migration on the local Compose stack, API create/update/validation smoke
       checks, and a headless browser flow covering two-tag selection, History
       filtering, detail rendering, removal, and saved editing.
+- [x] [DevOps] Multi-tag workout release deployed 2026-09-16 from commit
+      `2a64be7`: CI run `35084915934` and GHCR run `35084915945` passed;
+      immutable client/server images are healthy on pm-docker; PostgreSQL was
+      backed up before the tag migration and retained 3 sessions, 17 exercises,
+      and 50 sets; NPM proxy host `id=32` and the Homepage entry remained
+      correct; local/LAN home and health checks returned 200; a live smoke
+      rendered two reusable tag suggestions and History filters, then saved a
+      tag edit. Temporary smoke data was removed. The public edge retained its
+      pre-existing Cloudflare Basic-auth 401.
 - [x] [DevOps] Swipeable exercise picker release deployed 2026-09-16 from
       commit `93d3417`: CI run `35079569568` and GHCR run `35079569495`
       passed; immutable client/server images are healthy on pm-docker;
