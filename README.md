@@ -31,9 +31,11 @@ subscription.**
   PRs charted over time, plus a per-session table.
 - **Dashboard** — total volume, session count, current **streak**, workout days,
   average duration, and a volume-per-session chart.
-- **History** — every session with its exercises, volume, and duration.
+- **Custom workout tags** — attach multiple reusable, color-coded tags to a
+  session and filter History by tag.
+- **History** — every session with its exercises, tags, volume, and duration.
 - **Saved workout editing** — update session details, exercises, sets, RPE, and
-  warmup flags after logging.
+  warmup flags or tags after logging.
 - **Self-hosted** — Postgres for your data, seeded with realistic demo workouts
   so the app is populated on first run.
 
@@ -69,12 +71,15 @@ React (Vite) client ──HTTP──> Express API ──Prisma──> PostgreSQL
    /log /history /progress       /api/v1/...
 ```
 
-Relational model — a session has exercises, an exercise has sets:
+Relational model — a session has reusable tags and exercises, and an exercise
+has sets:
 
 ```
-WorkoutSession ─< SessionExercise >─ Exercise
-                      │
-                      └─< Set (reps, weight, rpe, isWarmup)
+WorkoutSession >─< WorkoutTag
+       │
+       └─< SessionExercise >─ Exercise
+                    │
+                    └─< Set (reps, weight, rpe, isWarmup)
 ```
 
 Exercises are entered free-form and reused by name. All analytics (volume,
@@ -90,11 +95,12 @@ estimated 1RM, streaks, progress) live in a pure, unit-tested module
 | GET / POST | `/sessions` | list / create a full session |
 | GET / PUT / DELETE | `/sessions/:id` | detail / update / delete |
 | GET / POST | `/exercises` | list / create exercises |
+| GET | `/tags` | reusable tags ordered by usage |
 
 ## Verify
 
 ```bash
-cd server && npm test    # analytics unit tests (node:test)
+cd server && npm test    # analytics and tag unit tests (node:test)
 cd client && npm run build
 docker compose config --quiet
 ```

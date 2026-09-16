@@ -5,6 +5,15 @@ export type Exercise = {
   lastSet: { reps: number; weight: number; performedAt: string } | null;
 };
 
+export type TagColor = "emerald" | "blue" | "violet" | "amber" | "rose" | "cyan";
+
+export type WorkoutTag = {
+  id: string;
+  name: string;
+  color: TagColor;
+  usedCount?: number;
+};
+
 export type SetRow = {
   id?: string;
   setNumber: number;
@@ -34,6 +43,7 @@ export type SessionFull = {
   performedAt: string;
   notes?: string | null;
   durationMin?: number | null;
+  tags: WorkoutTag[];
   exercises: SessionExercise[];
   stats?: SessionStats;
 };
@@ -43,6 +53,7 @@ export type SessionListItem = {
   performedAt: string;
   notes?: string | null;
   durationMin?: number | null;
+  tags: WorkoutTag[];
   exerciseNames: string[];
 } & SessionStats;
 
@@ -66,3 +77,4 @@ export type Progress = {
 // Draft types used by the logging form before saving.
 export type DraftSet = { reps: string; weight: string; rpe: string; isWarmup: boolean };
 export type DraftExercise = { name: string; sets: DraftSet[] };
+export type DraftTag = Pick<WorkoutTag, "name" | "color"> & { id?: string };

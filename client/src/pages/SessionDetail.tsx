@@ -4,6 +4,7 @@ import { api } from "../api";
 import type { SessionFull } from "../types";
 import { fmtFullDate, fmtVolume } from "../format";
 import { Trash } from "../components/icons";
+import { tagColorClasses } from "../tagStyles";
 
 export default function SessionDetail() {
   const { id = "" } = useParams();
@@ -36,6 +37,15 @@ export default function SessionDetail() {
             {session.durationMin ? ` · ${session.durationMin} min` : ""}
           </p>
           {session.notes && <p className="mt-1 text-white/70 italic">“{session.notes}”</p>}
+          {session.tags.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {session.tags.map((tag) => (
+                <span key={tag.id} className={`rounded-full border px-2.5 py-1 text-xs ${tagColorClasses(tag.color)}`}>
+                  #{tag.name}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <Link to={`/session/${id}/edit`} className="btn-ghost text-sm">Edit</Link>

@@ -1,4 +1,4 @@
-import type { Exercise, Progress, SessionFull, SessionListItem, Summary } from "./types";
+import type { Exercise, Progress, SessionFull, SessionListItem, Summary, WorkoutTag } from "./types";
 
 const configuredApiUrl = import.meta.env.VITE_API_URL as string | undefined;
 const apiOrigin =
@@ -20,6 +20,7 @@ async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
 export const api = {
   summary: () => req<Summary>("/analytics/summary"),
   exercises: () => req<Exercise[]>("/exercises"),
+  tags: () => req<WorkoutTag[]>("/tags"),
   sessions: () => req<SessionListItem[]>("/sessions"),
   session: (id: string) => req<SessionFull>(`/sessions/${id}`),
   createSession: (body: unknown) =>

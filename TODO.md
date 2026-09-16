@@ -4,6 +4,12 @@ Status: **flagship build complete** (verified end-to-end 2026-06-20).
 Central direction lives in `~/Freelance/NOW.md`; this file tracks the build.
 Spec source: `~/Freelance/Archive/Freelance-OS/Projects/01-Workout-Tracker`.
 
+## Now
+
+- [ ] [DevOps] Deploy the multi-tag workout release through CI/GHCR to
+      pm-docker, back up PostgreSQL, and verify the migration, NPM route,
+      Homepage entry, health endpoints, and live tag workflow.
+
 ## Done
 
 - [x] Monorepo scaffold: docker-compose, server/client Dockerfiles, nginx SPA,
@@ -50,6 +56,13 @@ Spec source: `~/Freelance/Archive/Freelance-OS/Projects/01-Workout-Tracker`.
       selecting an item on touch-down. Verified locally 2026-09-16 at 390×844:
       a real touch gesture moved the list from 0 to 234px, kept the picker open,
       and a subsequent tap selected Pull Up and autofilled 6 reps at 0 kg.
+- [x] [Dev] Added reusable, customizable multi-tag support to workout sessions:
+      create/edit assignment for up to five color-coded tags, case-insensitive
+      reuse, History filtering, and detail display. Verified 2026-09-16 with 10
+      server tests, a production client build, Prisma validation, the additive
+      migration on the local Compose stack, API create/update/validation smoke
+      checks, and a headless browser flow covering two-tag selection, History
+      filtering, detail rendering, removal, and saved editing.
 - [x] [DevOps] Swipeable exercise picker release deployed 2026-09-16 from
       commit `93d3417`: CI run `35079569568` and GHCR run `35079569495`
       passed; immutable client/server images are healthy on pm-docker;

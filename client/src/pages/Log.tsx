@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api";
-import type { DraftExercise, Exercise } from "../types";
+import type { DraftExercise, DraftTag, Exercise, TagColor, WorkoutTag } from "../types";
 import { ChevronDown, Plus, Trash } from "../components/icons";
+import { TAG_COLOR_OPTIONS, tagColorClasses } from "../tagStyles";
 
 const emptySet = () => ({ reps: "", weight: "", rpe: "", isWarmup: false });
 const emptyExercise = (): DraftExercise => ({ name: "", sets: [emptySet()] });
@@ -12,8 +13,12 @@ export default function Log() {
   const editing = Boolean(id);
   const navigate = useNavigate();
   const [known, setKnown] = useState<Exercise[]>([]);
+  const [knownTags, setKnownTags] = useState<WorkoutTag[]>([]);
   const [duration, setDuration] = useState("");
   const [notes, setNotes] = useState("");
+  const [tags, setTags] = useState<DraftTag[]>([]);
+  const [tagInput, setTagInput] = useState("");
+  const [tagColor, setTagColor] = useState<TagColor>("emerald");
   const [exercises, setExercises] = useState<DraftExercise[]>([emptyExercise()]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -23,6 +28,7 @@ export default function Log() {
 
   useEffect(() => {
     api.exercises().then(setKnown).catch(() => {});
+    api.tags().then(setKnownTags).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -32,6 +38,7 @@ export default function Log() {
       .then((session) => {
         setDuration(session.durationMin != null ? String(session.durationMin) : "");
         setNotes(session.notes || "");
+        setTags(session.tags.map(({ id: tagId, name, color }) => ({ id: tagId, name, color })));
         setExercises(
           session.exercises.length > 0
             ? session.exercises.map((item) => ({
@@ -108,6 +115,37 @@ export default function Log() {
     });
   };
 
+  const addTag = (suggested?: WorkoutTag) => {
+    const name = (suggested?.name || tagInput).trim().replace(/\s+/g, " ");
+    if (!name) return;
+    if (name.length > 24) {
+      setError("Tag names must be 24 characters or fewer.");
+      return;
+    }
+    if (tags.length >= 5) {
+      setError("Add no more than 5 tags to a workout.");
+      return;
+    }
+
+    const normalizedName = name.toLocaleLowerCase();
+    if (tags.some((tag) => tag.name.toLocaleLowerCase() === normalizedName)) {
+      setTagInput("");
+      return;
+    }
+
+    const existing = suggested || knownTags.find(
+      (tag) => tag.name.toLocaleLowerCase() === normalizedName
+    );
+    setTags((current) => [
+      ...current,
+      existing
+        ? { id: existing.id, name: existing.name, color: existing.color }
+        : { name, color: tagColor },
+    ]);
+    setTagInput("");
+    setError("");
+  };
+
   const handleExerciseKeyDown = (
     event: React.KeyboardEvent<HTMLInputElement>,
     exerciseIndex: number,
@@ -138,6 +176,7 @@ export default function Log() {
     const payload = {
       durationMin: duration ? Number(duration) : undefined,
       notes: notes || undefined,
+      tags: tags.map(({ name, color }) => ({ name, color })),
       exercises: exercises
         .map((e) => ({
           name: e.name.trim(),
@@ -171,6 +210,13 @@ export default function Log() {
   if (!ready) {
     return <p className={error ? "text-red-400" : "text-white/50"}>{error || "Loading workout…"}</p>;
   }
+
+  const normalizedTagQuery = tagInput.trim().toLocaleLowerCase();
+  const selectedTagNames = new Set(tags.map((tag) => tag.name.toLocaleLowerCase()));
+  const tagSuggestions = knownTags
+    .filter((tag) => !selectedTagNames.has(tag.name.toLocaleLowerCase()))
+    .filter((tag) => !normalizedTagQuery || tag.name.toLocaleLowerCase().includes(normalizedTagQuery))
+    .slice(0, 8);
 
   return (
     <div className="space-y-5 max-w-2xl mx-auto">
@@ -318,6 +364,92 @@ export default function Log() {
         }}>
         <Plus /> Add exercise
       </button>
+
+      <div className="card p-4 space-y-3">
+        <div>
+          <div className="flex items-center justify-between gap-3">
+            <label htmlFor="workout-tag" className="text-sm font-medium text-white/80">Tags</label>
+            <span className="text-xs text-white/40">{tags.length}/5</span>
+          </div>
+          <p className="mt-0.5 text-xs text-white/40">Add multiple labels to organize this workout.</p>
+        </div>
+
+        {tags.length > 0 && (
+          <div className="flex flex-wrap gap-2" aria-label="Selected workout tags">
+            {tags.map((tag) => (
+              <button
+                key={tag.name.toLocaleLowerCase()}
+                type="button"
+                className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 py-1 text-sm ${tagColorClasses(tag.color)}`}
+                aria-label={`Remove ${tag.name} tag`}
+                onClick={() => setTags((current) => current.filter((item) => item !== tag))}
+              >
+                <span>#{tag.name}</span><span aria-hidden="true" className="text-base leading-none">×</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          <input
+            id="workout-tag"
+            className="input min-w-0 flex-1"
+            maxLength={24}
+            placeholder="e.g. Push, Heavy, Morning"
+            value={tagInput}
+            onChange={(event) => setTagInput(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                addTag();
+              }
+            }}
+          />
+          <button
+            type="button"
+            className="btn-ghost inline-flex shrink-0 items-center gap-1"
+            disabled={!tagInput.trim() || tags.length >= 5}
+            onClick={() => addTag()}
+          >
+            <Plus size={16} /> Add
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-white/40">New tag color</span>
+          <div className="flex flex-wrap gap-1.5" aria-label="New tag color">
+            {TAG_COLOR_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                title={option.label}
+                aria-label={option.label}
+                aria-pressed={tagColor === option.value}
+                className={`h-7 w-7 rounded-full border-2 ${option.swatch} ${
+                  tagColor === option.value ? "border-white" : "border-transparent opacity-60 hover:opacity-100"
+                }`}
+                onClick={() => setTagColor(option.value)}
+              />
+            ))}
+          </div>
+        </div>
+
+        {tagSuggestions.length > 0 && tags.length < 5 && (
+          <div className="flex flex-wrap gap-2 border-t border-white/5 pt-3">
+            <span className="w-full text-xs text-white/40">Previously used</span>
+            {tagSuggestions.map((tag) => (
+              <button
+                key={tag.id}
+                type="button"
+                className={`rounded-full border px-3 py-1 text-sm transition-opacity hover:opacity-80 ${tagColorClasses(tag.color)}`}
+                onClick={() => addTag(tag)}
+              >
+                #{tag.name}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className="card p-4 grid grid-cols-2 gap-3">
         <label className="flex flex-col gap-1 text-sm text-white/60">
