@@ -34,6 +34,8 @@ Spec source: `~/Freelance/Archive/Freelance-OS/Projects/01-Workout-Tracker`.
       and server images are healthy on pm-docker; local/public home and health
       checks returned 200; NPM proxy host `id=32` remained unchanged; live
       browser smoke verified the prefilled editor and Add exercise action.
+- [x] [Dev] Progress exercise selector hides exercises with zero recorded
+      workouts. Verified 2026-09-16 with a clean production client build.
 
 ## Next — user action
 

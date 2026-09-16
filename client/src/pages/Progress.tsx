@@ -16,8 +16,10 @@ export default function Progress() {
     api
       .exercises()
       .then((ex) => {
-        setExercises(ex);
-        if (ex.length) setSelected(ex[0].id);
+        const usedExercises = ex.filter((exercise) => exercise.usedCount > 0);
+
+        setExercises(usedExercises);
+        if (usedExercises.length) setSelected(usedExercises[0].id);
       })
       .catch((e) => setError(e.message));
   }, []);
