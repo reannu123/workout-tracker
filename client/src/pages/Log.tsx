@@ -229,7 +229,7 @@ export default function Log() {
                 <div
                   id={listboxId}
                   role="listbox"
-                  className="absolute z-30 mt-2 max-h-64 w-full overflow-y-auto overscroll-contain rounded-xl border border-white/15 bg-slate-900 p-1 shadow-2xl"
+                  className="absolute z-30 mt-2 max-h-64 w-full touch-pan-y overflow-y-auto overscroll-contain rounded-xl border border-white/15 bg-slate-900 p-1 shadow-2xl"
                 >
                   {suggestions.length > 0 ? suggestions.map((suggestion, suggestionIndex) => (
                     <button
@@ -242,13 +242,7 @@ export default function Log() {
                         suggestionIndex === activeSuggestion ? "bg-emerald-500/20 text-white" : "text-white/80 hover:bg-white/10"
                       }`}
                       onMouseEnter={() => setActiveSuggestion(suggestionIndex)}
-                      onPointerDown={(event) => {
-                        event.preventDefault();
-                        selectExercise(ei, suggestion);
-                      }}
-                      onClick={(event) => {
-                        if (event.detail === 0) selectExercise(ei, suggestion);
-                      }}
+                      onClick={() => selectExercise(ei, suggestion)}
                     >
                       <span className="font-medium">{suggestion.name}</span>
                       {suggestion.lastSet && (

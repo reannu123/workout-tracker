@@ -46,6 +46,10 @@ Spec source: `~/Freelance/Archive/Freelance-OS/Projects/01-Workout-Tracker`.
       Verified 2026-09-16 with a production client build and 390×844 touch
       emulation covering open, filter, selection/autofill, outside close, 48px
       touch targets, and keyboard selection.
+- [x] [Dev] Exercise suggestions allow vertical swipe scrolling without
+      selecting an item on touch-down. Verified locally 2026-09-16 at 390×844:
+      a real touch gesture moved the list from 0 to 234px, kept the picker open,
+      and a subsequent tap selected Pull Up and autofilled 6 reps at 0 kg.
 - [x] [DevOps] Mobile exercise picker release deployed 2026-09-16 from commit
       `b21f7eb`: CI run `35078562622` and GHCR run `35078562623` passed;
       immutable client/server images are healthy on pm-docker; PostgreSQL was
